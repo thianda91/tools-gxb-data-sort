@@ -1,0 +1,8 @@
+pandas
+*build
+*dist
+*.xlsx
+*.docx
+*.lock
+*.spec
+*.exe
