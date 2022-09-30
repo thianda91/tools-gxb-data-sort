@@ -1,6 +1,8 @@
+__pycache__
 pandas
 *build
 *dist
+*.ini
 *.xlsx
 *.docx
 *.lock

@@ -22,3 +22,46 @@
 
 - gxb_data_sort.exe
 - config.ini
+
+
+## 配置文件 `config.ini` 内容
+
+```ini
+
+[common]
+
+# 台账路径
+path = 客户数据.xlsx
+
+# 工信部导出文件名包含的关键字
+import_filename = 
+# 导入文件密码 设置为 0 表示没密码、设置为 1 表示自动识别密码，识别规则为文件名中4个数字表示的当日日期、设置为 任意字符，表示当前所有文件以此密码读取
+key = 
+
+# 台账列名(用 tab 分割)
+col_names=
+
+# 台账索引
+index = 用户号码
+
+first_time = 首次接收时间
+last_time = 最近时间
+
+# 读取工信部导出文件的 sheet 名
+read_sheet_name = 客户数据
+
+# 写入台账的 sheet 名
+book_sheet_name = Sheet1
+```
+
+
+## 更新历史
+
+
+### v0.6(2022-09-30)
+
+- 新增可读取加密 excel 的功能。
+
+### v0.5(2022-09-27)
+
+- 基本功能实现。

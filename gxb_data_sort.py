@@ -2,6 +2,9 @@
 
 from xdaLibs import iniconfig
 from colorama import Fore, Back, init as init_colorama
+from msoffcrypto import OfficeFile
+import io
+import re
 from pandas import read_excel, concat, DataFrame
 import time
 from pathlib import Path
@@ -12,7 +15,7 @@ import traceback
 from sys import exit
 
 __title__ = ''.join(chr(x) for x in [24037, 20449, 37096, 32593, 31449, 39640, 21361, 23458, 25143, 25968, 25454, 25972, 29702, 23567, 24037, 20855])
-__version__ = 'v0.5'
+__version__ = 'v0.6'
 __author__ = ''.join(chr(x) for x in [20110, 26174, 36798, 46, 38081, 23725])
 
 DEBUG_FILE = 'debug_log.txt'
@@ -40,6 +43,29 @@ FIRST_TIME = config.get('common', 'first_time')
 LAST_TIME = config.get('common', 'last_time')
 READ_SHEET_NAME = config.get('common', 'read_sheet_name')
 BOOK_SHEET_NAME = config.get('common', 'book_sheet_name')
+
+
+def open_excel_with_key(file: str, key: str) -> DataFrame:
+    '''
+    打开带密码的 excel 文件
+    '''
+    if key == '0' or key == '':
+        # 没密码
+        io_file = file
+    else:
+        # 有密码
+        io_file = io.BytesIO()
+        if key == '1':
+            # 密码需要自动识别
+            key = re.search(r'[0-9]+', file).group()[:4]
+
+        with open(file, 'rb') as f:
+            excel = OfficeFile(f)
+            excel.load_key(key)
+            excel.decrypt(io_file)
+    i_df = read_excel(io=io_file, sheet_name=READ_SHEET_NAME, dtype={'接收时间': str})
+    del io_file
+    return i_df
 
 
 def init_table(filename: str, col_names: list) -> None:
@@ -116,10 +142,11 @@ def main():
     print(Fore.MAGENTA + '正在运行，请等待...')
     # 循环读取，汇总到 list
     for f in filenames:
-        i_df = read_excel(io=f, sheet_name=READ_SHEET_NAME, dtype={'接收时间': str})
+        key = config.get('common', 'key')
+        i_df = open_excel_with_key(str(f), key)
         i_df_filter = i_df[i_df['省份'] == '辽宁']
         df_list.append(i_df_filter)
-    
+
         print('')
     # 连接成一个 dataFrame
     df = concat(objs=df_list, ignore_index=True)
@@ -128,7 +155,7 @@ def main():
     if book_df.empty:
         book_df = concat([book_df, df])
         book_df = self_compare(book_df)
-        print(Fore.MAGENTA + Back.LIGHTYELLOW_EX+ '>>>>>self_compare')
+        print(Fore.MAGENTA + Back.LIGHTYELLOW_EX + '>>>>>self_compare')
     else:
         df[LAST_TIME] = ''
         df['次数'] = None
@@ -144,7 +171,7 @@ def main():
 
 
 if __name__ == '__main__':
-    if time.time() > time.mktime(time.strptime('20221031','%Y%m%d')):
+    if time.time() > time.mktime(time.strptime('20221031', '%Y%m%d')):
         print(Fore.RED + '**** 本工具为旧版本，已无法使用。')
         input()
         exit()
@@ -153,8 +180,8 @@ if __name__ == '__main__':
     except Exception as err:
         print(err)
         traceback.print_exc(file=open(DEBUG_FILE, 'w'))
-        print(Fore.LIGHTRED_EX + '出错啦。请反馈目录中的文件：', DEBUG_FILE)  
-    input('按回车退出')
+        print(Fore.LIGHTRED_EX + '出错啦。请反馈目录中的文件：', DEBUG_FILE)
+        input('按回车退出')
     exit()
 
 d1 = DataFrame({'a': [10, 11, 12, 13, 14], 'b': [20, 21, 22, 23, 24]})
